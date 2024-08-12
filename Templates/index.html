@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing URL Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('/static/wallpaper.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            position: relative; /* Ensure title is positioned relative to body */
+        }
+        .title {
+            position: absolute;
+            top: 20%; /* Adjusted title position */
+            width: 100%;
+            text-align: center;
+            color: #333333; /* Dark grey color */
+            font-size: 36px; /* Increase font size for better visibility */
+            font-weight: bold;
+            text-transform: uppercase; /* Capitalize text */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); /* Shadow for better readability */
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            z-index: 1; /* Ensure container is above the wallpaper */
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 18px;
+            color: #555;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin: 0 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .button-container {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping to handle smaller screens */
+            gap: 10px; /* Space between buttons */
+            justify-content: center; /* Center buttons horizontally */
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .prediction, .url-info {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+            text-align: left;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f1f1f1;
+            word-wrap: break-word;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 12px;
+            margin: 15% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .modal-header, .modal-footer {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 {
+            margin: 0;
+        }
+        .close {
+            color: #aaa;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">Phishing URL Detection</div>
+    <div class="container">
+        <form id="urlForm">
+            <label for="url">Enter URL:</label>
+            <input type="text" id="url" name="url" placeholder="https://example.com" required>
+            <div class="button-container">
+                <button type="button" onclick="checkUrl()">Check</button>
+                <button type="button" onclick="markPhish()">Mark Phish</button>
+                <button type="button" onclick="markNotPhish()">Mark Not Phish</button>
+                <button type="button" onclick="clearInput()">Clear</button>
+                <button type="button" onclick="openModal()">More INFO</button>
+            </div>
+        </form>
+        <div id="predictionResult" class="prediction">
+            <!-- Prediction result will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Modal for URL Information -->
+    <div id="urlModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>URL Information</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="urlInfo" class="url-info">
+                <!-- URL information will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const correctPassword = '123456789';
+
+        function checkUrl() {
+            const url = document.getElementById('url').value;
+            if (url) {
+                fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ url })
+                })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('predictionResult').innerHTML = data;
+                })
+                .catch(error => {
+                    document.getElementById('predictionResult').innerHTML = 'Error checking URL.';
+                });
+            } else {
+                alert('Please enter a URL.');
+            }
+        }
+
+        function markPhish() {
+            const url = document.getElementById('url').value;
+            if (url) {
+                const password = prompt('Please enter the password:');
+                if (password === correctPassword) {
+                    fetch('/mark_phish', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                    })
+                    .catch(error => {
+                        alert('Error marking URL as phishing.');
+                    });
+                } else {
+                    alert('Incorrect password.');
+                }
+            } else {
+                alert('Please enter a URL before marking.');
+            }
+        }
+
+        function markNotPhish() {
+            const url = document.getElementById('url').value;
+            if (url) {
+                const password = prompt('Please enter the password:');
+                if (password === correctPassword) {
+                    fetch('/mark_not_phish', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                    })
+                    .catch(error => {
+                        alert('Error marking URL as not phishing.');
+                    });
+                } else {
+                    alert('Incorrect password.');
+                }
+            } else {
+                alert('Please enter a URL before marking.');
+            }
+        }
+
+        function clearInput() {
+            document.getElementById('url').value = '';
+            document.getElementById('predictionResult').innerHTML = '';
+        }
+
+        function openModal() {
+            const url = document.getElementById('url').value;
+            if (url) {
+                fetch('/more_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('urlInfo').innerHTML = data.info;
+                    document.getElementById('urlModal').style.display = 'flex'; // Updated modal ID
+                })
+                .catch(error => {
+                    document.getElementById('urlInfo').innerHTML = 'Error retrieving URL information.';
+                    document.getElementById('urlModal').style.display = 'flex'; // Updated modal ID
+                });
+            } else {
+                alert('Please enter a URL before retrieving more information.');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('urlModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
