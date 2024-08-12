@@ -21,7 +21,7 @@ The model achieves approximately 80% accuracy, demonstrating better performance 
 # Web Application Features
 URL Input & Prediction: Users can input URLs and receive predictions.
 User Feedback: Users can mark URLs as phishing or legitimate, updating local databases.
-Additional Information: Access domain and URL details for informed decisions.
+Additional Information: Access domain and URL details for informed decisions.(should replace with your API on the code)
 # Conclusion
 This project successfully developed a phishing URL detection system, providing users with a powerful tool to identify and guard against phishing attempts. The combination of deep learning techniques and a user-friendly interface offers a robust solution to evolving phishing threats.
 
